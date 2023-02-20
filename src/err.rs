@@ -8,38 +8,34 @@ pub type Result<T, E = Error> = std::result::Result<T, E>;
 // Maybe have multiple error types so general errors are propagated but function specific ones can be handled explicitly?
 #[derive(Error, Debug)]
 pub enum Error {
-    #[error("cannot connect to database properly")]
+    #[error("External request failed")]
     Connection(#[from] reqwest::Error),
 
-    #[error("failed to DatabaseLogin. response: {0:?}")]
+    // this error can only be created by one function which prevents the program from starting
+    #[error("failed to login to database. response: {0:?}")]
     DatabaseLogin(Value),
 
     #[error("bad status: {0:?}")]
     BadHttpStatus(StatusCode),
 
-    #[error("entity not found: {0:?}")]
-    NoSuchEntity(String),
+    #[error("entity not found")]
+    NoSuchEntity,
 
-    #[error("bad query")]
+    /// indicates either a badly written request or a badly configured database. Used often, found rarely.
+    #[error("bad query: {0:?}")]
     BadQuery(Value),
 
     #[error("missing data. expected field: {0}")]
     MissingData(String),
 
-    #[error("malformed field. expected {field} to be {exp} rather than {real}")]
-    MalformedData {
-        field: String,
-        exp: String,
-        real: String,
-    },
-
+    /// Error created when attempting to create an object with an existing id.
     #[error("ID {0:?} already exists")]
     IDExists(String),
 
     #[error("failed to hash password")]
     HashFailure,
 
-    #[error("bad string {0:?} potential sql injection attempted")]
+    #[error("bad input string {0:?} potential sql injection attempted")]
     BadString(String),
 }
 

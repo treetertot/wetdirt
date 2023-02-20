@@ -20,7 +20,6 @@ async fn main() {
 
     let q = manager.create_user("soupconsort", "smellybean").await;
     println!("{:?}", q);
-
     //let app = Router::new()
     //    .route("/", get(|| async { "Hello, World!" }))
     //    .route("/about", {

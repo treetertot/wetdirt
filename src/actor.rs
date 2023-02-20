@@ -23,9 +23,9 @@ impl UserManager {
             acct[5..]
                 .split('@')
                 .next()
-                .ok_or_else(|| Error::NoSuchEntity("no username".into()))?
+                .ok_or_else(|| Error::NoSuchEntity)?
         } else {
-            return Err(Error::NoSuchEntity("'acct:' not specified".into()));
+            return Err(Error::NoSuchEntity);
         }
         .to_string();
         validate_name(&username)?;
@@ -35,21 +35,15 @@ impl UserManager {
         "
         );
 
-        //let response = self
-        //    .db
-        //    .query(query)
-        //    .await?
-        //    .pop()
-        //    .ok_or_else(|| Error::BadQuery("empty response".into()))??;
-        //let result = response
-        //    .get("result")
-        //    .ok_or_else(|| Error::BadQuery("result missing".into()))?;
-        //let result = result
-        //    .as_array()
-        //    .ok_or_else(|| Error::BadQuery("result is not an array".into()))?;
-        //if result.len() == 0 {
-        //    return Err(Error::NoSuchEntity("actor not found".into()));
-        //}
+        let response = self
+            .db
+            .query(query)
+            .await?
+            .pop()
+            .ok_or_else(|| Error::BadQuery("empty response".into()))?;
+        if response.len() == 0 {
+            return Err(Error::NoSuchEntity);
+        }
 
         Ok(username)
     }
