@@ -79,15 +79,24 @@ impl Database {
                 Value::Object(mut map) => {
                     let result = map.remove("result");
                     let status = map.get("status");
-                    match (status, result) {
-                        (Some(ok), Some(Value::Array(arr))) if ok == &*OK => {
+                    let detail = map.get("detail");
+                    match (status, result, detail) {
+                        (Some(ok), Some(Value::Array(arr)), _) if ok == &*OK => {
                             Ok(arr.into_iter().map(|rvalue| match rvalue {
                                 Value::Object(map) => Ok(map),
                                 _ => Err(Error::BadQuery("database improperly configured".into())),
                             }))
                         }
-                        (Some(_err), _) => Err(Error::BadQuery(map.into())),
-                        (None, _) => Err(Error::BadQuery("no status given".into())),
+                        (Some(_err), _, Some(Value::String(detail)))
+                            if detail.ends_with("already exists") =>
+                        {
+                            Err(match detail.split('`').skip(1).next() {
+                                Some(id) => Error::IDExists(id.to_string()),
+                                None => Error::IDExists("unknown".to_string()),
+                            })
+                        }
+                        (_, _, Some(detail)) => Err(Error::BadQuery(detail.clone())),
+                        _ => Err(Error::BadQuery("status or detail missing".into())),
                     }
                 }
                 _ => Err(Error::BadQuery("not an object".to_string().into())),
